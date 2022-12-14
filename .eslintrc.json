@@ -1,0 +1,61 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es2021": true
+    },
+    "extends": "airbnb-base",
+    "overrides": [
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest"
+    },
+    "rules": {
+      "import/newline-after-import": "off",
+      "arrow-parens": ["error", "as-needed", {"requireForBlockBody": true}],
+      "camelcase": "off",
+      "dot-location": ["error", "property"],
+      "no-console": "off",
+      "no-trailing-spaces": "off",
+      "no-multi-assign": "off",
+      "guard-for-in": "off",
+      "no-multi-spaces": ["error", {"ignoreEOLComments": true}],
+      "spaced-comment": ["error", "always"],
+      "curly": ["error", "all"],
+      "brace-style": ["error", "1tbs"],
+      "object-curly-spacing": ["error", "never"],
+      "object-curly-newline": ["error", {"multiline": true}],
+      "no-plusplus": "off",
+      "max-len": [2, 120, 2, {"ignoreComments": true, "ignoreTemplateLiterals": true, "ignoreStrings": true}],
+      "quote-props": [2, "consistent-as-needed"],
+      "no-cond-assign": ["error", "except-parens"],
+      "radix": "off",
+      "space-infix-ops": ["error", { "int32Hint": false }],
+      "no-unused-vars": [1, {"vars": "all", "args": "after-used", "argsIgnorePattern": "^_"}],
+      "default-case": "off",
+      "no-else-return": "off",
+      "no-param-reassign": "off",
+      "quotes": ["error", "single"],
+      "no-restricted-syntax": ["error", "LabeledStatement", "WithStatement"],
+      "wrap-iife": ["error", "any"],
+      "implicit-arrow-linebreak": "off",
+      "prefer-destructuring": ["warn", {"object": true, "array": true}],
+      "prefer-arrow-callback": ["error", {"allowNamedFunctions": true}], // necessary for async functions
+      "no-extra-parens": ["error", "all", {"nestedBinaryExpressions": false, "enforceForArrowConditionals": false}],
+      "no-negated-condition": "error",
+      "no-unneeded-ternary": "error",
+      "no-async-promise-executor": "off",
+      "keyword-spacing": ["error", {
+        "overrides": {
+          "if": {"after": false},
+          "for": {"after": false},
+          "while": {"after": false},
+          "switch": {"after": false},
+          "catch": {"after": false}
+        }
+      }],
+      "no-multiple-empty-lines": ["error", {"max": 2}],
+      "max-classes-per-file": "off",
+      "import/extensions": "off"
+    }
+}

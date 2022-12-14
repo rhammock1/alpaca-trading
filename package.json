@@ -1,0 +1,20 @@
+{
+  "name": "alpaca_trading",
+  "version": "1.0.0",
+  "description": "A stock and crypto trading node app to make money for me",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV=testing node index.js 1"
+  },
+  "author": "smokeybear",
+  "license": "ISC",
+  "dependencies": {
+    "@alpacahq/alpaca-trade-api": "^2.16.1",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.29.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0"
+  }
+}
