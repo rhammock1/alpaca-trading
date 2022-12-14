@@ -134,6 +134,7 @@ class LongShort {
   async cancelExistingOrders() {
     let orders;
     try {
+      log('debug', 'Canceling existing orders.');
       orders = await this.alpaca.getOrders({
         status: 'open',
         direction: 'desc',
@@ -155,6 +156,7 @@ class LongShort {
   // TODO - Refactor this because there is some complex if statements and repeated logic throughout
   // Rebalance our position after an update
   async rebalance() {
+    log('debug', 'Rebalancing...');
     await this.rerank();
 
     // Clear existing orders again.
@@ -194,6 +196,7 @@ class LongShort {
       if(this.long.indexOf(symbol) < 0) {
         // Position is not in short list
         if(this.short.indexOf(symbol) < 0) {
+          log('debug', 'Position is not in long or short list. Clearing position.', symbol);
           // Clear position
           try {
             await this.submitOrder({
@@ -207,6 +210,7 @@ class LongShort {
           }
         } else if(position.side === position_type.LONG) { // Position in short list
           try {
+            log('debug', 'Position is in short list. Clearing long position and short instead.', symbol);
             // Position changed from long to short. Clear long position and short instead
             await this.submitOrder({
               quantity,
@@ -218,6 +222,7 @@ class LongShort {
             log('error', 'Error attempting to send order and change from LONG to SHORT', err.error);
           }
         } else {
+          log('debug', {symbol, quantity, q_short: this.q_short}, 'Position is in short list. Adjusting SHORT position.');
           // Position is not where we want it
           if(quantity !== this.q_short) {
             // Need to adjust position amount
@@ -239,6 +244,7 @@ class LongShort {
           resolve();
         }
       } else if(position.side === position_type.SHORT) {
+        log('debug', {symbol}, 'Position is in long list. Clearing short position and long instead.');
         // Position in LONG list
         // Position changed from short to long. Clear short position and long instead
         try {
@@ -252,6 +258,7 @@ class LongShort {
           log('error', 'Error attempting to send order when changing from SHORT to LONG.', err.error);
         }
       } else {
+        log('debug', {symbol, quantity, q_long: this.q_long}, 'Position is in long list. Adjusting LONG position.');
         // Position is not where we want it
         if(quantity !== this.q_long) {
           console.log('adjusting position', symbol, quantity, this.q_long);
@@ -280,6 +287,7 @@ class LongShort {
     this.adjusted_q_short = -1;
 
     try {
+      log('debug', 'Sending orders to remaining stocks in long and short list.');
       // Send orders to all remaining stocks in the long and short list
       const [long_orders, short_orders] = await Promise.all([
         this.sendBatchOrder({
@@ -299,6 +307,7 @@ class LongShort {
 
       // Handle rejected/incomplete long orders
       if(long_orders.incomplete.length > 0 && long_orders.executed.length > 0) {
+        log('debug', 'Long orders incomplete. Adjusting quantity.', this.long_amount);
         const prices = await this.getTotalPrice(long_orders.executed);
         const complete_total = prices.reduce((a, b) => a + b, 0);
         if(complete_total !== 0) {
@@ -308,6 +317,7 @@ class LongShort {
 
       // Handle rejected/incomplete short orders
       if(short_orders.incomplete.length > 0 && long_orders.executed.length > 0) {
+        log('debug', 'Short orders incomplete. Adjusting quantity.', this.short_amount);
         const prices = await this.getTotalPrice(short_orders.executed);
         const complete_total = prices.reduce((a, b) => a + b, 0);
         if(complete_total !== 0) {
@@ -319,10 +329,11 @@ class LongShort {
     }
 
     try {
+      log('debug', 'Reordering stocks that did not throw an error.');
       // Reorder stocks that didn't throw an error so that the equity quota is reached.
       await new Promise(async (resolve) => {
         const all_promises = [];
-
+        log('debug', 'Adjusted Q Long: ', this.adjusted_q_long);
         if(this.adjusted_q_long >= 0) {
           this.q_long = this.adjusted_q_long - this.q_long;
           all_promises.push(
@@ -334,6 +345,7 @@ class LongShort {
           );
         }
 
+        log('debug', 'Adjusted Q Short: ', this.adjusted_q_short);
         if(this.adjusted_q_short >= 0) {
           this.q_short = this.adjusted_q_short - this.q_short;
           all_promises.push(
@@ -361,6 +373,7 @@ class LongShort {
    * Ranks all stocks by percent change over the past 10 minutes (higher is better).
    */
   async rank() {
+    log('debug', 'Ranking stocks...');
     await this.getPercentChanges();
 
     // Sort the stocks in place by the percent change field (marked by pc)
@@ -371,15 +384,16 @@ class LongShort {
    * @description Reranks all stocks to adjust longs and shorts
    */
   async rerank() {
+    log('debug', 'Ranking...');
     await this.rank();
 
     // Grabs the top and bottom bucket (according to percentage) of the sorted stock list
     // to get the long and short lists
-    const bucket_size = Math.floor(this.stock_list.length * this.bucketPct);
+    const bucket_size = Math.floor(this.stock_list.length * this.bucket_pct);
 
     this.short = this.stock_list.slice(0, bucket_size).map(i => i.name);
     this.long = this.stock_list.slice(this.stock_list.length - bucket_size).map(i => i.name);
-
+    log('debug', 'Bucket size:', bucket_size);
     // Determine amount to long/short based on total stock price of each bucket.
     // Employs a 130-30 strategy
     try {
@@ -388,6 +402,7 @@ class LongShort {
 
       this.short_amount = 0.30 * equity;
       this.long_amount = Number(this.short_amount) + Number(equity);
+      log('debug', 'Short amount:', this.short_amount, 'Long amount:', this.long_amount, 'Equity:', equity);
     } catch(err) {
       log('error', 'Error while getting the account or long/short amounts.', err.error);
     }
@@ -397,6 +412,7 @@ class LongShort {
       const long_total = long_prices.reduce((a, b) => a + b, 0);
 
       this.q_long = Math.floor(this.long_amount / long_total);
+      log('debug', 'Long equity: ', this.q_long);
     } catch(err) {
       log('error', 'Error while getting long total prices.', err.error);
     }
@@ -406,6 +422,7 @@ class LongShort {
       const short_total = short_prices.reduce((a, b) => a + b, 0);
 
       this.q_short = Math.floor(this.short_amount / short_total);
+      log('debug', 'Short equity: ', this.q_short);
     } catch(err) {
       log('error', 'Error while getting short total prices.', err.error);
     }
@@ -416,6 +433,7 @@ class LongShort {
    * @param @{Array} stocks
    */
   async getTotalPrice(stocks = []) {
+    log('debug', 'Getting total price of stocks:', stocks);
     return Promise.all(stocks.map(stock => new Promise(async (resolve) => {
       try {
         // polygon and alpaca have different responses to keep
@@ -440,6 +458,9 @@ class LongShort {
             limit: 1,
           });
           const bars = await generatorToArray(resp);
+          if(bars.length === 0) {
+            log('debug', {stock}, 'No bars found for stock');
+          }
           resolve(bars.length ? bars[0].ClosePrice : 0);
         }
       } catch(err) {
@@ -456,6 +477,7 @@ class LongShort {
    * @param {string} side - buy or sell
    */
   async submitOrder({quantity, stock, side}) {
+    log('debug', {quantity, stock, side}, 'Submitting order...');
     return new Promise(async (resolve) => {
       if(quantity <= 0) {
         log('info', {quantity, stock, side}, 'Quantity is less than 0. Market order not sent.');
@@ -484,6 +506,7 @@ class LongShort {
    * @description Submit a batch order that returns completed and uncompleted orders
    */
   async sendBatchOrder({quantity, stocks, side}) {
+    log('debug', {quantity, stocks, side}, 'Sending batch order...');
     return new Promise(async (resolve) => {
       const incomplete = [];
       const executed = [];
@@ -511,6 +534,7 @@ class LongShort {
    * @description Get percent changes of the stock prices over the last 10 minutes
    */
   async getPercentChanges(limit = 10) {
+    log('debug', 'Getting percent changes...');
     return Promise.all(this.stock_list.map(stock => new Promise(async (resolve) => {
       try {
         // polygon and alpaca have different responses to keep backwards
