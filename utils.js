@@ -35,4 +35,33 @@ async function awaitMarketOpen(alpaca, ttc) {
   });
 }
 
-module.exports = {awaitMarketOpen};
+/**
+ * @description Cancels all open orders so they don't impact our buying power.
+ * @param {Instance} alpaca
+ */
+async function cancelExistingOrders(alpaca) {
+  let orders;
+  try {
+    log('debug', 'Canceling existing orders.');
+    orders = await alpaca.getOrders({
+      status: 'open',
+      direction: 'desc',
+    });
+  } catch(err) {
+    log('error', 'Error while getting orders.', err);
+  }
+
+  return Promise.all(orders.map(o => new Promise(async (resolve) => {
+    try {
+      await alpaca.cancelOrder(o.id);
+    } catch(err) {
+      log('error', 'Error while attempting to cancel orders.', err.error);
+    }
+    resolve();
+  })));
+}
+
+module.exports = {
+  awaitMarketOpen,
+  cancelExistingOrders,
+};

@@ -5,7 +5,7 @@
 require('dotenv').config();
 const Alpaca = require('@alpacahq/alpaca-trade-api');
 const log = require('./log');
-const {awaitMarketOpen} = require('./utils');
+const {awaitMarketOpen, cancelExistingOrders} = require('./utils');
 const CONFIG = require('./stock_config.json');
 
 const {APCA_API_KEY_ID, APCA_API_SECRET_KEY} = process.env;
@@ -57,7 +57,7 @@ class LongShort {
 
   async run() {
     // First, cancel any existing orders so they don't impact our buying power
-    await this.cancelExistingOrders();
+    await cancelExistingOrders(this.alpaca);
 
     // Wait for the market to open
     log('info', 'Waiting for market to open.');
@@ -108,28 +108,6 @@ class LongShort {
     }, MINUTE);
   }
 
-  async cancelExistingOrders() {
-    let orders;
-    try {
-      log('debug', 'Canceling existing orders.');
-      orders = await this.alpaca.getOrders({
-        status: 'open',
-        direction: 'desc',
-      });
-    } catch(err) {
-      log('error', 'Error while getting orders.', err);
-    }
-
-    return Promise.all(orders.map(o => new Promise(async (resolve) => {
-      try {
-        await this.alpaca.cancelOrder(o.id);
-      } catch(err) {
-        log('error', 'Error while attempting to cancel orders.', err.error);
-      }
-      resolve();
-    })));
-  }
-
   // TODO - Refactor this because there is some complex if statements and repeated logic throughout
   // Rebalance our position after an update
   async rebalance() {
@@ -137,7 +115,7 @@ class LongShort {
     await this.rerank();
 
     // Clear existing orders again.
-    await this.cancelExistingOrders();
+    await cancelExistingOrders(this.alpaca);
 
     log(
       'info',

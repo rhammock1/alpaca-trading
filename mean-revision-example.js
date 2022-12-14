@@ -5,9 +5,10 @@
 require('dotenv').config();
 const Alpaca = require('@alpacahq/alpaca-trade-api');
 const log = require('./log');
+const {awaitMarketOpen, cancelExistingOrders} = require('./utils');
 const CONFIG = require('./stock_config.json');
 
-const {APCA_API_KEY_ID, APCA_API_SECRET_KEY, LOG_LEVEL} = process.env;
+const {APCA_API_KEY_ID, APCA_API_SECRET_KEY} = process.env;
 const USE_POLYGON = false;
 
 class MeanRevision {
@@ -26,9 +27,15 @@ class MeanRevision {
     this.stock = 'AAPL';
   }
 
-  async run() {}
+  async run() {
+    // First cancel any existing orders so they don't impact our buying power.
+    await cancelExistingOrders(this.alpaca);
 
-  awaitMarketOpen() {}
+    // Wait for market to open.
+    log('info', 'Waiting for market to open.');
+    this.time_to_close = await awaitMarketOpen(this.alpaca, this.time_to_close);
+    log('info', 'Market opened.');
+  }
 
   async rebalance() {}
 
