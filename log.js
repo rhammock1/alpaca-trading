@@ -9,15 +9,15 @@ const log_levels = {
 
 const log = (level, ...args) => {
   const actual_args = args.map((a) => {
-    if(typeof a === 'object') {
+    if(Array.isArray(a)) {
+      return `[${a.join(', ')}]`;
+    } else if(typeof a === 'object') {
       let string = '{';
       for(const key of Object.keys(a)) {
         string += `${key}: ${a[key]}${key === Object.keys(a)[Object.keys(a).length - 1] ? '' : ', '}`;
       }
       string += '}';
       return string;
-    } else if(Array.isArray(a)) {
-      return `[${a.join(', ')}]`;
     } else {
       return a;
     }
