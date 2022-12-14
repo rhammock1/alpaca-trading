@@ -5,6 +5,7 @@
 require('dotenv').config();
 const Alpaca = require('@alpacahq/alpaca-trade-api');
 const log = require('./log');
+const {awaitMarketOpen} = require('./utils');
 const CONFIG = require('./stock_config.json');
 
 const {APCA_API_KEY_ID, APCA_API_SECRET_KEY} = process.env;
@@ -60,7 +61,7 @@ class LongShort {
 
     // Wait for the market to open
     log('info', 'Waiting for market to open.');
-    await this.awaitMarketOpen();
+    this.time_to_close = await awaitMarketOpen(this.alpaca, this.time_to_close);
     log('info', 'Market opened.');
 
     // Rebalance the portfolio every minute, making necessary trades
@@ -105,30 +106,6 @@ class LongShort {
         await this.rebalance();
       }
     }, MINUTE);
-  }
-
-  // Do nothing until the market is open
-  async awaitMarketOpen() {
-    return new Promise((resolve) => {
-      const check = async () => {
-        try {
-          const clock = await this.alpaca.getClock();
-          if(clock.is_open) {
-            resolve();
-          } else {
-            const open_time = new Date(clock.next_open.substring(0, clock.next_close.length - 6));
-            const current_time = new Date(clock.timestamp.substring(0, clock.timestamp.length - 6));
-
-            this.time_to_close = Math.floor((open_time - current_time) / 1000 / 60);
-            log('info', `${this.time_to_close} minutes till the market opens again.`);
-            setTimeout(check, MINUTE);
-          }
-        } catch(err) {
-          log('error', 'Error while waiting for the market to open.', err.error);
-        }
-      };
-      check();
-    });
   }
 
   async cancelExistingOrders() {
