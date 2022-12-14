@@ -3,6 +3,7 @@
 This will hold various provided examples and my own implementations of trading strategies.
 
 [Alpaca Documentation](https://alpaca.markets/docs/)
+
 [Alpaca JS API GitHub](https://github.com/alpacahq/alpaca-trade-api-js)
 
 ### Getting started
