@@ -61,7 +61,21 @@ async function cancelExistingOrders(alpaca) {
   })));
 }
 
+/**
+ * @description Gets the time until the market closes.
+ * @param {Instance} alpaca 
+ * @returns time_to_close
+ */
+async function getMarketClose(alpaca) {
+  const clock = await alpaca.getClock();
+  const closing_time = new Date(clock.next_close.substring(0, clock.next_close.length - 6));
+  const current_time = new Date(clock.timestamp.substring(0, clock.timestamp.length - 6));
+  const time_to_close = Math.abs(closing_time - current_time);
+  return time_to_close;
+}
+
 module.exports = {
   awaitMarketOpen,
   cancelExistingOrders,
+  getMarketClose,
 };

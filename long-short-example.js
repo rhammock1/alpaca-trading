@@ -5,7 +5,11 @@
 require('dotenv').config();
 const Alpaca = require('@alpacahq/alpaca-trade-api');
 const log = require('./log');
-const {awaitMarketOpen, cancelExistingOrders} = require('./utils');
+const {
+  awaitMarketOpen,
+  cancelExistingOrders,
+  getMarketClose,
+} = require('./utils');
 const CONFIG = require('./stock_config.json');
 
 const {APCA_API_KEY_ID, APCA_API_SECRET_KEY} = process.env;
@@ -68,12 +72,9 @@ class LongShort {
     const spin = setInterval(async () => {
       // Figure out when the market will close so we can prepare to sell beforehand
       try {
-        const clock = await this.alpaca.getClock();
-        const closing_time = new Date(clock.next_close.substring(0, clock.next_close.length - 6));
-        const current_time = new Date(clock.timestamp.substring(0, clock.timestamp.length - 6));
-        this.time_to_close = Math.abs(closing_time - current_time);
+        this.time_to_close = await getMarketClose(this.alpaca);
       } catch(err) {
-        log('error', 'Error getting the market clock.', err.error);
+        log('error', 'Error while getting market close time.', err);
       }
 
       const INTERVAL = 15; // minutes
