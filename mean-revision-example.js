@@ -173,9 +173,58 @@ class MeanRevision {
     }
   }
 
-  async submitLimitOrder() {}
+  /**
+   * @description Submit a limit order if quantity is above 0.
+   * @param {number} qty - quantity of shares to buy or sell
+   * @param {string} side - buy or sell
+   */
+  async submitLimitOrder(qty, side) {
+    const log_details = {stock: this.stock, quantity: qty, side};
+    if(qty > 0) {
+      try {
+        const order = await this.alpaca.createOrder({
+          symbol: this.stock,
+          qty,
+          side,
+          type: 'limit',
+          time_in_force: 'day',
+          limit_price: this.current_price,
+        });
+        log('info', log_details, 'Limit order completed.');
+        this.last_order = order;
+      } catch(err) {
+        log('error', log_details, 'Error while submitting limit order.', err);
+      }
+    } else {
+      log('warn', log_details, 'Quantity is less than or equal to 0. Not submitting order.');
+    }
+  }
 
-  async submitMarketOrder() {}
+  /**
+   * @description Submit a market order if quantity is above 0.
+   * @param {number} qty - quantity of shares to buy or sell
+   * @param {string} side - buy or sell
+   */
+  async submitMarketOrder(qty, side) {
+    const log_details = {stock: this.stock, quantity: qty, side};
+    if(qty > 0) {
+      try {
+        const order = await this.alpaca.createOrder({
+          symbol: this.stock,
+          qty,
+          side,
+          type: 'market',
+          time_in_force: 'day',
+        });
+        log('info', log_details, 'Market order completed.');
+        this.last_order = order;
+      } catch(err) {
+        log('error', log_details, 'Error while submitting market order.', err);
+      }
+    } else {
+      log('warn', log_details, 'Quantity is less than or equal to 0. Not submitting order.');
+    }
+  }
 }
 
 const meanRevisionExample = new MeanRevision({keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock: 'AAPL'});
