@@ -11,6 +11,8 @@ This will hold various provided examples and my own implementations of trading s
   git clone https://github.com/rhammock1/alpaca-trading.git
   cd alpaca-trading
   npm i
+
+  echo "NODE_ENV=development\nLOG_LEVEL=debug\nAPCA_API_KEY_ID=YOUR_API_KEY\nAPCA_API_SECRET_KEY=YOUR_API_SECRET" >> .env
 ```
 
 ### Running the strategies
@@ -26,6 +28,4 @@ If you already know the strategy number, you can select the strategy number from
 
 ### Currently implemented strategies:
 1. Long Short (example provided by Alpaca Docs)
-
-### WIP strategies:
-1. Mean Revision (example provided by Alpaca Docs)
+2. Mean Revision (example provided by Alpaca Docs)
