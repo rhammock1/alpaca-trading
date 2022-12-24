@@ -24,6 +24,7 @@ class MeanRevision {
       keyId,
       secretKey,
       paper,
+      usePolygon: USE_POLYGON,
     });
 
     this.running_average = 0;
@@ -31,7 +32,6 @@ class MeanRevision {
     this.time_to_close = null;
     this.current_price = null;
 
-    // For example purposes
     this.stock = stock;
   }
 
@@ -227,10 +227,17 @@ class MeanRevision {
   }
 }
 
-const meanRevisionExample = new MeanRevision({keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock: 'AAPL'});
 const run = () => {
   log('warn', 'Running Mean Revision Example');
-  // meanRevisionExample.run();
+  if(!CONFIG?.stocks?.length) {
+    log('error', 'Please create a "./stock_config.json" file and insert an array of stock symbols to continue.');
+    return;
+  }
+  log('debug', `Creating new Mean Revision Example with stocks ${CONFIG.stocks}`);
+  for(const stock of CONFIG.stocks) {
+    const meanRevisionExample = new MeanRevision({keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock});
+    meanRevisionExample.run();
+  }
 };
 
 const name = () => 'Mean Revision Example';
