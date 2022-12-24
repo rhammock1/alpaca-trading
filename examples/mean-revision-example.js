@@ -4,13 +4,13 @@
 
 require('dotenv').config();
 const Alpaca = require('@alpacahq/alpaca-trade-api');
-const log = require('./log');
+const log = require('../log');
 const {
   awaitMarketOpen,
   cancelExistingOrders,
   getMarketClose,
-} = require('./utils');
-const CONFIG = require('./stock_config.json');
+} = require('../utils');
+const CONFIG = require('../stock_config.json');
 
 const {APCA_API_KEY_ID, APCA_API_SECRET_KEY} = process.env;
 const USE_POLYGON = false;
