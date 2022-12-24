@@ -70,7 +70,7 @@ class MeanRevision {
         try {
           const position = await this.alpaca.getPosition(this.stock);
           const {qty} = position;
-          await this.submitMarketOrder(qty, this.stock, 'sell');
+          await this.submitMarketOrder(qty, 'sell');
         } catch(err) {
           log('error', 'Error while closing positions.', err);
         }
@@ -137,12 +137,39 @@ class MeanRevision {
       // Sell our position if the price is above the running average
       if(position_qty > 0) {
         log('info', {stock: this.stock}, 'Price is above running average. Selling position.');
-        await this.submitLimitOrder(position_qty, this.stock, this.current_price, 'sell');
+        await this.submitLimitOrder(position_qty, 'sell');
       } else {
         log('info', {stock: this.stock}, 'No position in the stock. No action taken.');
       }
     } else if(this.current_price < this.running_average) {
       // Determine optimal amount of shares based on portfolio and market data
+      let portfolio_value = 0;
+      let buying_power = 0;
+      try {
+        const account = await this.alpaca.getAccount();
+        ({portfolio_value, buying_power} = account);
+      } catch(err) {
+        log('error', 'Error while getting account details in rebalance', err);
+      }
+      const portfolio_share = ((this.running_average - this.current_price) / this.current_price) * 200;
+      const target_position_value = portfolio_value * portfolio_share;
+      let amount_to_add = target_position_value - position_value;
+
+      // Add to our position, constrained by our buying power. Or, sell down to optimal amount of shares
+      const expression = add => Math.floor(add / this.current_price);
+      if(amount_to_add > 0) {
+        if(amount_to_add > buying_power) {
+          amount_to_add = buying_power;
+        }
+        const quantity_to_buy = expression(amount_to_add);
+        await this.submitLimitOrder(quantity_to_buy, 'buy');
+      } else {
+        amount_to_add *= -1;
+        const quantity_to_sell = expression(amount_to_add) > position_qty
+          ? position_qty
+          : expression(amount_to_add);
+        await this.submitLimitOrder(quantity_to_sell, 'sell');
+      }
     }
   }
 
