@@ -4,7 +4,7 @@
 
 require('dotenv').config();
 const Alpaca = require('@alpacahq/alpaca-trade-api');
-const log = require('../log');
+const log = require('../utils/log');
 const {
   awaitMarketOpen,
   cancelExistingOrders,

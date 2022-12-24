@@ -1,6 +1,6 @@
 require('dotenv').config();
 const readline = require('readline');
-const log = require('./log');
+const log = require('./utils/log');
 const longShortExample = require('./examples/long-short-example');
 const meanRevisionExample = require('./examples/mean-revision-example');
 
