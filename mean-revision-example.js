@@ -236,7 +236,14 @@ const run = () => {
   log('debug', `Creating new Mean Revision Example with stocks ${CONFIG.stocks}`);
   for(const stock of CONFIG.stocks) {
     const meanRevisionExample = new MeanRevision({keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock});
-    meanRevisionExample.run();
+    const index = CONFIG.stocks.indexOf(stock) + 1;
+    // I don't know if this is actually necessary, but it prevents the examples from running at the same time
+    // A second delay between each stock
+    const timeout = setTimeout(() => {
+      log('debug', `Initializing Mean Revision Example for ${stock}.`);
+      meanRevisionExample.run();
+      clearTimeout(timeout);
+    }, index * 1000);
   }
 };
 
