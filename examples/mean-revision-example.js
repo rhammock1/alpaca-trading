@@ -127,7 +127,7 @@ class MeanRevision {
       position_qty = response.qty;
       position_value = response.market_value;
     } catch(err) {
-      log('error', 'Error while getting position in rebalance.', err);
+      log('error', 'Error while getting position in rebalance.', err, err.response, err.config, err.toJSON());
     }
 
     // Get the new updated prices and running average
@@ -234,17 +234,23 @@ const run = () => {
     return;
   }
   log('debug', `Creating new Mean Revision Example with stocks ${CONFIG.stocks}`);
-  for(const stock of CONFIG.stocks) {
-    const meanRevisionExample = new MeanRevision({keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock});
-    const index = CONFIG.stocks.indexOf(stock) + 1;
-    // I don't know if this is actually necessary, but it prevents the examples from running at the same time
-    // A second delay between each stock
-    const timeout = setTimeout(() => {
-      log('debug', `Initializing Mean Revision Example for ${stock}.`);
-      meanRevisionExample.run();
-      clearTimeout(timeout);
-    }, index * 1000);
-  }
+  // DEBUG
+  const meanRevisionExample = new MeanRevision(
+    {keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock: CONFIG.stocks[0]},
+  );
+  log('debug', `Initailizing Mean Revision Example for ${CONFIG.stocks[0]}.`);
+  meanRevisionExample.run();
+  // for(const stock of CONFIG.stocks) {
+  //   const meanRevisionExample = new MeanRevision({keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock});
+  //   const index = CONFIG.stocks.indexOf(stock) + 1;
+  //   // I don't know if this is actually necessary, but it prevents the examples from running at the same time
+  //   // A second delay between each stock
+  //   const timeout = setTimeout(() => {
+  //     log('debug', `Initializing Mean Revision Example for ${stock}.`);
+  //     meanRevisionExample.run();
+  //     clearTimeout(timeout);
+  //   }, index * 1000);
+  // }
 };
 
 const name = () => 'Mean Revision Example';
