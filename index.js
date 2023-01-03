@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 require('dotenv').config();
 const readline = require('readline');
 const log = require('./utils/log');
@@ -38,7 +39,14 @@ const determineExample = async (test_example) => {
     validateInput(answer);
   });
 };
-
+// TODO - Add some cool ASCII art
+console.log(`
+  ____     _      ____    ____     _____    ____ \n
+ /  _  \  | |     |   |  /  _  \  |  ___|  /  _  \ \n
+ | |_| |  | |     | __|  | |_| |  |  |     | |_| | \n
+ |     |  | |__   | |    |     |  |  |__   |     | \n
+ | |-| |  |____|  |_|    | |-| |  |_____|  | |-| | \n
+`);
 log('info', 'The environment is: ', process.env.NODE_ENV);
 log('info', 'Thank you for testing.');
 // Present with options to select which example to run
