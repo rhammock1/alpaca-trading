@@ -12,7 +12,7 @@ const {
 } = require('../utils');
 const CONFIG = require('../stock_config.json');
 
-const {APCA_API_KEY_ID, APCA_API_SECRET_KEY} = process.env;
+const {APCA_API_KEY_ID, APCA_API_SECRET_KEY, NODE_ENV} = process.env;
 const USE_POLYGON = false;
 
 const MINUTE = 60000;
@@ -235,13 +235,21 @@ const run = () => {
   }
   log('debug', `Creating new Mean Revision Example with stocks ${CONFIG.stocks}`);
   // DEBUG
-  const meanRevisionExample = new MeanRevision(
-    {keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock: CONFIG.stocks[0]},
-  );
+  const meanRevisionExample = new MeanRevision({
+    keyId: APCA_API_KEY_ID,
+    secretKey: APCA_API_SECRET_KEY,
+    stock: CONFIG.stocks[0],
+    paper: NODE_ENV !== 'production', // only use live trading in production
+  });
   log('debug', `Initailizing Mean Revision Example for ${CONFIG.stocks[0]}.`);
   meanRevisionExample.run();
   // for(const stock of CONFIG.stocks) {
-  //   const meanRevisionExample = new MeanRevision({keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY, stock});
+  //   const meanRevisionExample = new MeanRevision({
+  //     keyId: APCA_API_KEY_ID,
+  //     secretKey: APCA_API_SECRET_KEY,
+  //     stock,
+  //     paper: NODE_ENV !== 'production', // only use live trading in production
+  //   });
   //   const index = CONFIG.stocks.indexOf(stock) + 1;
   //   // I don't know if this is actually necessary, but it prevents the examples from running at the same time
   //   // A second delay between each stock

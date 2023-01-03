@@ -12,7 +12,7 @@ const {
 } = require('../utils');
 const CONFIG = require('../stock_config.json');
 
-const {APCA_API_KEY_ID, APCA_API_SECRET_KEY} = process.env;
+const {APCA_API_KEY_ID, APCA_API_SECRET_KEY, NODE_ENV} = process.env;
 const USE_POLYGON = false;
 
 const MINUTE = 60000;
@@ -535,7 +535,11 @@ class LongShort {
   }
 }
 
-const longShortExample = new LongShort({keyId: APCA_API_KEY_ID, secretKey: APCA_API_SECRET_KEY});
+const longShortExample = new LongShort({
+  keyId: APCA_API_KEY_ID,
+  secretKey: APCA_API_SECRET_KEY,
+  paper: NODE_ENV !== 'production', // only use live trading in production
+});
 const run = () => {
   log('warn', 'Running Long Short Example');
   longShortExample.run();
