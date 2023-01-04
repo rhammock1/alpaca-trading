@@ -41,6 +41,9 @@ const determineExample = async (test_example) => {
 };
 // TODO - Add some cool ASCII art
 console.log('\n\n\n');
+console.log('**************************************************************');
+console.log('**************************************************************');
+console.log('\n');
 console.log('    ****    **        ********    ****    ********    ****    ');
 console.log('  **    **  **        **    **  **    **  **        **    **  '); 
 console.log('  ********  **        ********  ********  **        ********  ');
@@ -54,6 +57,9 @@ console.log('          **     ********  ********  **    **  ******         ');
 console.log('          **     ****      **    **  **    **  **             ');
 console.log('          **     **  **    **    **  **    **  **             ');
 console.log('          **     **    **  **    **  ******    ********       ');
+console.log('\n');
+console.log('**************************************************************');
+console.log('**************************************************************');
 console.log('\n\n\n');
 log('info', 'The environment is: ', process.env.NODE_ENV);
 log('info', 'Thank you for testing.');
