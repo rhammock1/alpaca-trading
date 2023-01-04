@@ -40,13 +40,21 @@ const determineExample = async (test_example) => {
   });
 };
 // TODO - Add some cool ASCII art
-console.log(`
-  ____     _      ____    ____     _____    ____ \n
- /  _  \  | |     |   |  /  _  \  |  ___|  /  _  \ \n
- | |_| |  | |     | __|  | |_| |  |  |     | |_| | \n
- |     |  | |__   | |    |     |  |  |__   |     | \n
- | |-| |  |____|  |_|    | |-| |  |_____|  | |-| | \n
-`);
+console.log('\n\n\n');
+console.log('    ****    **        ********    ****    ********    ****    ');
+console.log('  **    **  **        **    **  **    **  **        **    **  '); 
+console.log('  ********  **        ********  ********  **        ********  ');
+console.log('  **    **  **        **        **    **  **        **    **  ');
+console.log('  **    **  **        **        **    **  **        **    **  ');
+console.log('  **    **  ********  **        **    **  ********  **    **  ');
+console.log('\n');
+console.log('       ********  ********    ****    ******    ********       ');
+console.log('          **     **    **  **    **  **    **  **             ');
+console.log('          **     ********  ********  **    **  ******         ');
+console.log('          **     ****      **    **  **    **  **             ');
+console.log('          **     **  **    **    **  **    **  **             ');
+console.log('          **     **    **  **    **  ******    ********       ');
+console.log('\n\n\n');
 log('info', 'The environment is: ', process.env.NODE_ENV);
 log('info', 'Thank you for testing.');
 // Present with options to select which example to run
