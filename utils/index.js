@@ -5,13 +5,56 @@
 const log = require('./log');
 const MINUTE = 60000;
 
+let alpaca;
+
+/**
+ * @description Assign the Alpaca instance to a global variable
+ * @param {Instance} instance - Alpaca instance
+ */
+function cacheAlpacaInstance(instance) {
+  alpaca = instance;
+}
+
+/**
+ * @description Submit an order if quantity is above 0
+ * @param {number} obj.quantity - amount of stock to purchase
+ * @param {string} obj.stock - stock symbol
+ * @param {string} obj.side - buy or sell
+ * @param {string} obj.type - market or limit
+ */
+async function submitOrder({quantity, stock, side, type}) {
+  log('debug', {quantity, stock, side}, 'Submitting order...');
+  return new Promise(async (resolve) => {
+    if(quantity <= 0) {
+      log('info', {quantity, stock, side}, 'Quantity is less than 0. Market order not sent.');
+      resolve(true);
+      return;
+    }
+
+    try {
+      await alpaca.createOrder({
+        symbol: stock,
+        qty: quantity,
+        side,
+        type,
+        time_in_force: 'day',
+      });
+      log('info', {quantity, stock, side}, 'Market order completed.');
+      resolve(true);
+    } catch(err) {
+      log('error', {quantity, stock, side}, 'Market order failed.');
+      resolve(false);
+    }
+  });
+}
+
 /**
  * @description Do nothing until the market opens.
  * @param {Instance} alpaca 
  * @param {Date} ttc - Time to close
  * @returns 
  */
-async function awaitMarketOpen(alpaca, ttc) {
+async function awaitMarketOpen(ttc) {
   let time_to_close = ttc;
   return new Promise((resolve) => {
     const check = async () => {
@@ -39,7 +82,7 @@ async function awaitMarketOpen(alpaca, ttc) {
  * @description Cancels all open orders so they don't impact our buying power.
  * @param {Instance} alpaca
  */
-async function cancelExistingOrders(alpaca) {
+async function cancelExistingOrders() {
   let orders;
   try {
     log('debug', 'Canceling existing orders.');
@@ -66,7 +109,7 @@ async function cancelExistingOrders(alpaca) {
  * @param {Instance} alpaca 
  * @returns time_to_close
  */
-async function getMarketClose(alpaca) {
+async function getMarketClose() {
   const clock = await alpaca.getClock();
   const closing_time = new Date(clock.next_close.substring(0, clock.next_close.length - 6));
   const current_time = new Date(clock.timestamp.substring(0, clock.timestamp.length - 6));
@@ -78,4 +121,6 @@ module.exports = {
   awaitMarketOpen,
   cancelExistingOrders,
   getMarketClose,
+  submitOrder,
+  cacheAlpacaInstance,
 };

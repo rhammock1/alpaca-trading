@@ -9,6 +9,8 @@ const {
   awaitMarketOpen,
   cancelExistingOrders,
   getMarketClose,
+  cacheAlpacaInstance,
+  submitOrder,
 } = require('../utils');
 const CONFIG = require('../stock_config.json');
 
@@ -33,6 +35,8 @@ class MeanRevision {
     this.current_price = null;
 
     this.stock = stock;
+
+    cacheAlpacaInstance(this.alpaca);
   }
 
   async run() {

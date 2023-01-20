@@ -9,6 +9,8 @@ const {
   awaitMarketOpen,
   cancelExistingOrders,
   getMarketClose,
+  submitOrder,
+  cacheAlpacaInstance,
 } = require('../utils');
 const CONFIG = require('../stock_config.json');
 
@@ -57,22 +59,24 @@ class LongShort {
     this.short_amount = 0;
     this.time_to_close = null;
     this.bucket_pct = bucket_pct;
+
+    cacheAlpacaInstance(this.alpaca);
   }
 
   async run() {
     // First, cancel any existing orders so they don't impact our buying power
-    await cancelExistingOrders(this.alpaca);
+    await cancelExistingOrders();
 
     // Wait for the market to open
     log('info', 'Waiting for market to open.');
-    this.time_to_close = await awaitMarketOpen(this.alpaca, this.time_to_close);
+    this.time_to_close = await awaitMarketOpen(this.time_to_close);
     log('info', 'Market opened.');
 
     // Rebalance the portfolio every minute, making necessary trades
     const spin = setInterval(async () => {
       // Figure out when the market will close so we can prepare to sell beforehand
       try {
-        this.time_to_close = await getMarketClose(this.alpaca);
+        this.time_to_close = await getMarketClose();
       } catch(err) {
         log('error', 'Error while getting market close time.', err);
       }
@@ -86,9 +90,10 @@ class LongShort {
         try {
           const positions = await this.alpaca.getPositions();
 
-          await Promise.all(positions.map(p => this.submitOrder({
+          await Promise.all(positions.map(p => submitOrder({
             quantity: Math.abs(p.qty),
             stock: p.symbol,
+            type: 'market',
             side: p.side === position_type.LONG ? side_type.SELL : side_type.BUY,
           })));
         } catch(err) {
@@ -116,7 +121,7 @@ class LongShort {
     await this.rerank();
 
     // Clear existing orders again.
-    await cancelExistingOrders(this.alpaca);
+    await cancelExistingOrders();
 
     log(
       'info',
@@ -155,9 +160,10 @@ class LongShort {
           log('debug', 'Position is not in long or short list. Clearing position.', symbol);
           // Clear position
           try {
-            await this.submitOrder({
+            await submitOrder({
               quantity,
               stock: symbol,
+              type: 'market',
               side: position.side === position_type.LONG ? side_type.SELL : side_type.BUY,
             });
             resolve();
@@ -168,9 +174,10 @@ class LongShort {
           try {
             log('debug', 'Position is in short list. Clearing long position and short instead.', symbol);
             // Position changed from long to short. Clear long position and short instead
-            await this.submitOrder({
+            await submitOrder({
               quantity,
               stock: symbol,
+              type: 'market',
               side: side_type.SELL,
             });
             resolve();
@@ -184,9 +191,10 @@ class LongShort {
             // Need to adjust position amount
             const diff = Number(quantity) - Number(this.q_short);
             try {
-              await this.submitOrder({
+              await submitOrder({
                 quantity: Math.abs(diff),
                 stock: symbol,
+                type: 'market',
                 // buy = Too many short positions. Buy some back to rebalance
                 // sell = Too little short positions. Sell some more
                 side: diff > 0 ? side_type.BUY : side_type.SELL,
@@ -204,9 +212,10 @@ class LongShort {
         // Position in LONG list
         // Position changed from short to long. Clear short position and long instead
         try {
-          await this.submitOrder({
+          await submitOrder({
             quantity,
             stock: symbol,
+            type: 'market',
             side: side_type.BUY,
           });
           resolve();
@@ -224,9 +233,10 @@ class LongShort {
           // buy = Too little long positions. Buy some more
           const side = diff > 0 ? side_type.SELL : side_type.BUY;
           try {
-            await this.submitOrder({
+            await submitOrder({
               quantity: Math.abs(diff),
               stock: symbol,
+              type: 'market',
               side,
             });
           } catch(err) {
@@ -293,9 +303,10 @@ class LongShort {
         if(this.adjusted_q_long >= 0) {
           this.q_long = this.adjusted_q_long - this.q_long;
           all_promises.push(
-            ...executed.long.map(stock => this.submitOrder({
+            ...executed.long.map(stock => submitOrder({
               quantity: this.q_long,
               stock,
+              type: 'market',
               side: side_type.BUY,
             })),
           );
@@ -305,9 +316,10 @@ class LongShort {
         if(this.adjusted_q_short >= 0) {
           this.q_short = this.adjusted_q_short - this.q_short;
           all_promises.push(
-            ...executed.short.map(stock => this.submitOrder({
+            ...executed.short.map(stock => submitOrder({
               quantity: this.q_short,
               stock,
+              type: 'market',
               side: side_type.SELL,
             })),
           );
@@ -426,37 +438,37 @@ class LongShort {
     })));
   }
 
-  /**
-   * @description Submit an order if quantity is above 0
-   * @param {number} quantity - amount of stock to purchase
-   * @param {string} stock - stock symbol
-   * @param {string} side - buy or sell
-   */
-  async submitOrder({quantity, stock, side}) {
-    log('debug', {quantity, stock, side}, 'Submitting order...');
-    return new Promise(async (resolve) => {
-      if(quantity <= 0) {
-        log('info', {quantity, stock, side}, 'Quantity is less than 0. Market order not sent.');
-        resolve(true);
-        return;
-      }
+  // /**
+  //  * @description Submit an order if quantity is above 0
+  //  * @param {number} quantity - amount of stock to purchase
+  //  * @param {string} stock - stock symbol
+  //  * @param {string} side - buy or sell
+  //  */
+  // async submitOrder({quantity, stock, side}) {
+  //   log('debug', {quantity, stock, side}, 'Submitting order...');
+  //   return new Promise(async (resolve) => {
+  //     if(quantity <= 0) {
+  //       log('info', {quantity, stock, side}, 'Quantity is less than 0. Market order not sent.');
+  //       resolve(true);
+  //       return;
+  //     }
 
-      try {
-        await this.alpaca.createOrder({
-          symbol: stock,
-          qty: quantity,
-          side,
-          type: 'market',
-          time_in_force: 'day',
-        });
-        log('info', {quantity, stock, side}, 'Market order completed.');
-        resolve(true);
-      } catch(err) {
-        log('error', {quantity, stock, side}, 'Market order failed.');
-        resolve(false);
-      }
-    });
-  }
+  //     try {
+  //       await this.alpaca.createOrder({
+  //         symbol: stock,
+  //         qty: quantity,
+  //         side,
+  //         type: 'market',
+  //         time_in_force: 'day',
+  //       });
+  //       log('info', {quantity, stock, side}, 'Market order completed.');
+  //       resolve(true);
+  //     } catch(err) {
+  //       log('error', {quantity, stock, side}, 'Market order failed.');
+  //       resolve(false);
+  //     }
+  //   });
+  // }
 
   /**
    * @description Submit a batch order that returns completed and uncompleted orders
@@ -470,7 +482,7 @@ class LongShort {
       await Promise.all(stocks.map(stock => new Promise(async (res) => {
         if(!this.blacklist.has(stock)) {
           try {
-            const is_submitted = await this.submitOrder({quantity, stock, side});
+            const is_submitted = await submitOrder({quantity, stock, type: 'market', side});
             if(is_submitted) {
               executed.push(stock);
             } else {
