@@ -10,6 +10,10 @@ const examples = {
   2: meanRevisionExample,
 };
 
+/**
+ * @description Validates the user's input and runs the selected example
+ * @param {string} input_val 
+ */
 const validateInput = (input_val) => {
   if(examples[input_val]) {
     log('info', `Running ${examples[input_val].name()}`);
@@ -20,6 +24,9 @@ const validateInput = (input_val) => {
   }
 };
 
+/**
+ * @description Lists the programs and returns a formatted string with them
+ */
 const enumerateExamples = () => {
   let string = '';
   for(const key of Object.keys(examples)) {
@@ -29,6 +36,11 @@ const enumerateExamples = () => {
   return string;
 };
 
+/**
+ * @description Prompts the user to select an example to run or runs the example specified in the command line
+ * @param {string} [test_example]
+ * @returns 
+ */
 const determineExample = async (test_example) => {
   if(test_example) {
     validateInput(test_example);
@@ -41,6 +53,9 @@ const determineExample = async (test_example) => {
   });
 };
 
+/**
+ * @description Prints cool art
+ */
 const printArt = () => {
   console.log('\n\n\n');
   console.log('**************************************************************');
@@ -65,6 +80,9 @@ const printArt = () => {
   console.log('\n\n\n');
 };
 
+/**
+ * @description Prints the help message
+ */
 const helpMessage = () => {
   log('warn', 'Usage: node index.js [optional example number]');
   log('warn', 'Example numbers:', '\n ', enumerateExamples());
@@ -72,6 +90,9 @@ const helpMessage = () => {
   log('warn', 'Please configure a config.json file in the root directory before running any examples.');
 };
 
+/**
+ * @description Runs the program
+ */
 const run = () => {
   printArt();
 
