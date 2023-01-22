@@ -28,7 +28,7 @@ class MeanRevision {
       usePolygon: USE_POLYGON,
     });
 
-    this.running_average_store = {};
+    this.running_average = {};
     this.last_order = {};
     this.time_to_close = null;
     this.current_price = {};
