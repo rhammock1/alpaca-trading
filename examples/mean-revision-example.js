@@ -8,20 +8,19 @@ const log = require('../utils/log');
 const {
   awaitMarketOpen,
   cancelExistingOrders,
-  getMarketClose,
   cacheAlpacaInstance,
   submitOrder,
+  spin,
 } = require('../utils');
 const CONFIG = require('../stock_config.json');
 
 const {APCA_API_KEY_ID, APCA_API_SECRET_KEY, NODE_ENV} = process.env;
 const USE_POLYGON = false;
 
-const MINUTE = 60000;
 const AVERAGE_DIVISOR = 20;
 
 class MeanRevision {
-  constructor({keyId, secretKey, paper = true, stock}) {
+  constructor({keyId, secretKey, paper = true}) {
     this.alpaca = new Alpaca({
       keyId,
       secretKey,
@@ -29,12 +28,12 @@ class MeanRevision {
       usePolygon: USE_POLYGON,
     });
 
-    this.running_average = 0;
-    this.last_order = null;
+    this.running_average_store = {};
+    this.last_order = {};
     this.time_to_close = null;
-    this.current_price = null;
+    this.current_price = {};
 
-    this.stock = stock;
+    this.stocks = CONFIG.stocks;
   }
 
   async run() {
@@ -45,48 +44,11 @@ class MeanRevision {
     log('info', 'Waiting for market to open.');
     this.time_to_close = await awaitMarketOpen(this.alpaca, this.time_to_close);
     log('info', 'Market opened.');
-
-    // Get the running average of prices of the last 20 minutes, waiting until we have 20 bars from the market.
     
     log('info', 'Getting running average.');
     await this.getRunningAverage();
 
-    // Rebalance the portfolio every minute based off of the running average.
-    const spin = setInterval(async () => {
-      // Clear the last order so that we only have 1 hanging order.
-      if(this.last_order !== null) {
-        await this.alpaca.cancelOrder(this.last_order.id)
-          .catch(err => log('error', 'Error while canceling order in spin.', err));
-      }
-
-      // Figure out when the market will close so we can prepare to sell beforehand.
-      try {
-        this.time_to_close = await getMarketClose(this.alpaca);
-      } catch(err) {
-        log('error', 'Error getting the market close.', err.error);
-      }
-
-      if(this.time_to_close < (15 * MINUTE)) {
-        // Close all positions when 15 minutes til market close.
-        log('info', 'Market closing soon.  Closing positions.');
-        try {
-          const position = await this.alpaca.getPosition(this.stock);
-          const {qty} = position;
-          await this.submitMarketOrder(qty, 'sell');
-        } catch(err) {
-          log('error', 'Error while closing positions.', err);
-        }
-        clearInterval(spin);
-        console.log('Sleeping until market close (15 minutes).');
-        setTimeout(() => {
-          // Run script again after market close for next trading day.
-          this.run();
-        }, 15 * MINUTE);
-      } else {
-        // Rebalance the portfolio.
-        await this.rebalance();
-      }
-    }, MINUTE);
+    await spin(this.run.bind(this), this.rebalance.bind(this));
   }
 
   /**
@@ -236,31 +198,12 @@ const run = () => {
     return;
   }
   log('debug', `Creating new Mean Revision Example with stocks ${CONFIG.stocks}`);
-  // DEBUG
   const meanRevisionExample = new MeanRevision({
     keyId: APCA_API_KEY_ID,
     secretKey: APCA_API_SECRET_KEY,
-    stock: CONFIG.stocks[0],
     paper: NODE_ENV !== 'production', // only use live trading in production
   });
-  log('debug', `Initailizing Mean Revision Example for ${CONFIG.stocks[0]}.`);
   meanRevisionExample.run();
-  // for(const stock of CONFIG.stocks) {
-  //   const meanRevisionExample = new MeanRevision({
-  //     keyId: APCA_API_KEY_ID,
-  //     secretKey: APCA_API_SECRET_KEY,
-  //     stock,
-  //     paper: NODE_ENV !== 'production', // only use live trading in production
-  //   });
-  //   const index = CONFIG.stocks.indexOf(stock) + 1;
-  //   // I don't know if this is actually necessary, but it prevents the examples from running at the same time
-  //   // A second delay between each stock
-  //   const timeout = setTimeout(() => {
-  //     log('debug', `Initializing Mean Revision Example for ${stock}.`);
-  //     meanRevisionExample.run();
-  //     clearTimeout(timeout);
-  //   }, index * 1000);
-  // }
 };
 
 const name = () => 'Mean Revision Example';

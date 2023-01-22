@@ -110,11 +110,63 @@ async function cancelExistingOrders() {
  * @returns time_to_close
  */
 async function getMarketClose() {
-  const clock = await alpaca.getClock();
-  const closing_time = new Date(clock.next_close.substring(0, clock.next_close.length - 6));
-  const current_time = new Date(clock.timestamp.substring(0, clock.timestamp.length - 6));
-  const time_to_close = Math.abs(closing_time - current_time);
+  let time_to_close;
+  try {
+    const clock = await alpaca.getClock();
+    const closing_time = new Date(clock.next_close.substring(0, clock.next_close.length - 6));
+    const current_time = new Date(clock.timestamp.substring(0, clock.timestamp.length - 6));
+    time_to_close = Math.abs(closing_time - current_time);
+  } catch(err) {
+    log('error', 'Error getting the market close.', err.error);
+  }
   return time_to_close;
+}
+
+/**
+ * @description Keep the script running every minute
+ * @param {fn} run - parent function
+ * @param {fn} rebalance -
+ */
+async function spin(run, rebalance) {
+  const interval = setInterval(async () => {
+    // Figure out when the market will close so we can prepare to sell beforehand
+    try {
+      this.time_to_close = await getMarketClose();
+    } catch(err) {
+      log('error', 'Error while getting market close time.', err);
+    }
+
+    const INTERVAL = 15; // minutes
+
+    if(this.time_to_close < (MINUTE * INTERVAL)) {
+      // Close all positions when there are 15 minutes till market close
+      log('info', 'The market is closing soon. Closing positions.');
+
+      try {
+        const positions = await alpaca.getPositions();
+
+        await Promise.all(positions.map(p => submitOrder({
+          quantity: Math.abs(p.qty),
+          stock: p.symbol,
+          type: 'market',
+          side: p.side === 'long' ? 'sell' : 'buy',
+        })));
+      } catch(err) {
+        log('error', 'Error while closing positions before market close.', err.error);
+      }
+
+      clearInterval(interval);
+      log('info', `Sleeping until market close (${INTERVAL} minutes).`);
+
+      setTimeout(() => {
+        // Run script again after market close for the next trading day
+        run();
+      }, MINUTE * INTERVAL);
+    } else {
+      // Rebalance the portfolio
+      await rebalance();
+    }
+  }, MINUTE);
 }
 
 module.exports = {
@@ -123,4 +175,5 @@ module.exports = {
   getMarketClose,
   submitOrder,
   cacheAlpacaInstance,
+  spin,
 };

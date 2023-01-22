@@ -8,16 +8,15 @@ const log = require('../utils/log');
 const {
   awaitMarketOpen,
   cancelExistingOrders,
-  getMarketClose,
   submitOrder,
   cacheAlpacaInstance,
+  spin,
 } = require('../utils');
 const CONFIG = require('../stock_config.json');
 
 const {APCA_API_KEY_ID, APCA_API_SECRET_KEY, NODE_ENV} = process.env;
 const USE_POLYGON = false;
 
-const MINUTE = 60000;
 const side_type = {BUY: 'buy', SELL: 'sell'};
 const position_type = {LONG: 'long', SHORT: 'short'};
 
@@ -42,10 +41,6 @@ class LongShort {
       usePolygon: USE_POLYGON,
     });
 
-    if(!CONFIG?.stocks?.length) {
-      log('error', 'Please create a "./stock_config.json" file and insert an array of stock symbols to continue.');
-      return;
-    }
     this.stock_list = CONFIG.stocks.map(i => ({name: i, pc: 0}));
 
     this.long = [];
@@ -72,46 +67,7 @@ class LongShort {
     this.time_to_close = await awaitMarketOpen(this.time_to_close);
     log('info', 'Market opened.');
 
-    // Rebalance the portfolio every minute, making necessary trades
-    const spin = setInterval(async () => {
-      // Figure out when the market will close so we can prepare to sell beforehand
-      try {
-        this.time_to_close = await getMarketClose();
-      } catch(err) {
-        log('error', 'Error while getting market close time.', err);
-      }
-
-      const INTERVAL = 15; // minutes
-
-      if(this.time_to_close < (MINUTE * INTERVAL)) {
-        // Close all positions when there are 15 minutes till market close
-        log('info', 'The market is closing soon. Closing positions.');
-
-        try {
-          const positions = await this.alpaca.getPositions();
-
-          await Promise.all(positions.map(p => submitOrder({
-            quantity: Math.abs(p.qty),
-            stock: p.symbol,
-            type: 'market',
-            side: p.side === position_type.LONG ? side_type.SELL : side_type.BUY,
-          })));
-        } catch(err) {
-          log('error', 'Error while closing positions before market close.', err.error);
-        }
-
-        clearInterval(spin);
-        log('info', `Sleeping until market close (${INTERVAL} minutes).`);
-
-        setTimeout(() => {
-          // Run script again after market close for the next trading day
-          this.run();
-        }, MINUTE * INTERVAL);
-      } else {
-        // Rebalance the portfolio
-        await this.rebalance();
-      }
-    }, MINUTE);
+    await spin(this.run.bind(this), this.rebalance.bind(this));
   }
 
   // TODO - Refactor this because there is some complex if statements and repeated logic throughout
@@ -554,6 +510,10 @@ const longShortExample = new LongShort({
 });
 const run = () => {
   log('warn', 'Running Long Short Example');
+  if(!CONFIG?.stocks?.length) {
+    log('error', 'Please create a "./stock_config.json" file and insert an array of stock symbols to continue.');
+    return;
+  }
   longShortExample.run();
 };
 
