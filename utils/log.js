@@ -3,8 +3,9 @@ const {LOG_LEVEL} = process.env;
 
 const log_levels = {
   error: 1,
-  info: 2,
-  debug: 3,
+  warn: 2,
+  info: 3,
+  debug: 4,
 };
 
 const log = (level, ...args) => {
