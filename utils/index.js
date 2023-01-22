@@ -13,6 +13,7 @@ let alpaca;
  */
 function cacheAlpacaInstance(instance) {
   alpaca = instance;
+  log('debug', 'Successfully cached Alpaca instance');
 }
 
 /**

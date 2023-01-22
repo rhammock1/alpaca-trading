@@ -34,6 +34,8 @@ class MeanRevision {
     this.current_price = {};
 
     this.stocks = CONFIG.stocks;
+
+    cacheAlpacaInstance(this.alpaca);
   }
 
   async run() {
