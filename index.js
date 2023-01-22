@@ -4,10 +4,14 @@ const readline = require('readline');
 const log = require('./utils/log');
 const longShortExample = require('./examples/long-short-example');
 const meanRevisionExample = require('./examples/mean-revision-example');
+const politicianTracker = require('./politician-tracking');
+const cryptoTrader = require('./crypto');
 
-const examples = {
+const programs = {
   1: longShortExample,
   2: meanRevisionExample,
+  3: politicianTracker,
+  4: cryptoTrader,
 };
 
 /**
@@ -15,9 +19,9 @@ const examples = {
  * @param {string} input_val 
  */
 const validateInput = (input_val) => {
-  if(examples[input_val]) {
-    log('info', `Running ${examples[input_val].name()}`);
-    examples[input_val].run();
+  if(programs[input_val]) {
+    log('info', `Running ${programs[input_val].name()}`);
+    programs[input_val].run();
   } else {
     log('error', 'Invalid selection, please try again.');
     process.exit(1);
@@ -29,9 +33,9 @@ const validateInput = (input_val) => {
  */
 const enumerateExamples = () => {
   let string = '';
-  for(const key of Object.keys(examples)) {
-    string += `${key}. ${examples[key].name()}\n${
-      key === Object.keys(examples)[Object.keys(examples).length - 1] ? '' : '  '}`;
+  for(const key of Object.keys(programs)) {
+    string += `${key}. ${programs[key].name()}\n${
+      key === Object.keys(programs)[Object.keys(programs).length - 1] ? '' : '  '}`;
   }
   return string;
 };
@@ -87,7 +91,7 @@ const helpMessage = () => {
   log('warn', 'Usage: node index.js [optional example number]');
   log('warn', 'Example numbers:', '\n ', enumerateExamples());
   log('warn', 'If no example number is provided, you will be prompted to select one.');
-  log('warn', 'Please configure a config.json file in the root directory before running any examples.');
+  log('warn', 'Please configure a config.json file in the root directory before running any programs.');
 };
 
 /**
