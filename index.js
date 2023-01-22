@@ -23,7 +23,8 @@ const validateInput = (input_val) => {
 const enumerateExamples = () => {
   let string = '';
   for(const key of Object.keys(examples)) {
-    string += `${key}. ${examples[key].name()}\n  `;
+    string += `${key}. ${examples[key].name()}\n${
+      key === Object.keys(examples)[Object.keys(examples).length - 1] ? '' : '  '}`;
   }
   return string;
 };
@@ -35,7 +36,7 @@ const determineExample = async (test_example) => {
   }
   const rl = readline.createInterface({input: process.stdin, output: process.stderr});
 
-  await rl.question(`Please select an example to run:\n  ${enumerateExamples()}`, (answer) => {
+  await rl.question(`Please select an example to run:\n  ${enumerateExamples()}>`, (answer) => {
     validateInput(answer);
   });
 };
