@@ -39,28 +39,47 @@ const determineExample = async (test_example) => {
     validateInput(answer);
   });
 };
-// TODO - Add some cool ASCII art
-console.log('\n\n\n');
-console.log('**************************************************************');
-console.log('**************************************************************');
-console.log('\n');
-console.log('    ****    **        ********    ****    ********    ****    ');
-console.log('  **    **  **        **    **  **    **  **        **    **  '); 
-console.log('  ********  **        ********  ********  **        ********  ');
-console.log('  **    **  **        **        **    **  **        **    **  ');
-console.log('  **    **  **        **        **    **  **        **    **  ');
-console.log('  **    **  ********  **        **    **  ********  **    **  ');
-console.log('\n');
-console.log('       ********  ********    ****    ******    ********       ');
-console.log('          **     **    **  **    **  **    **  **             ');
-console.log('          **     ********  ********  **    **  ******         ');
-console.log('          **     ****      **    **  **    **  **             ');
-console.log('          **     **  **    **    **  **    **  **             ');
-console.log('          **     **    **  **    **  ******    ********       ');
-console.log('\n');
-console.log('**************************************************************');
-console.log('**************************************************************');
-console.log('\n\n\n');
+
+const printArt = () => {
+  console.log('\n\n\n');
+  console.log('**************************************************************');
+  console.log('**************************************************************');
+  console.log('\n');
+  console.log('    ****    **        ********    ****    ********    ****    ');
+  console.log('  **    **  **        **    **  **    **  **        **    **  ');
+  console.log('  ********  **        ********  ********  **        ********  ');
+  console.log('  **    **  **        **        **    **  **        **    **  ');
+  console.log('  **    **  **        **        **    **  **        **    **  ');
+  console.log('  **    **  ********  **        **    **  ********  **    **  ');
+  console.log('\n');
+  console.log('       ********  ********    ****    ******    ********       ');
+  console.log('          **     **    **  **    **  **    **  **             ');
+  console.log('          **     ********  ********  **    **  ******         ');
+  console.log('          **     ****      **    **  **    **  **             ');
+  console.log('          **     **  **    **    **  **    **  **             ');
+  console.log('          **     **    **  **    **  ******    ********       ');
+  console.log('\n');
+  console.log('**************************************************************');
+  console.log('**************************************************************');
+  console.log('\n\n\n');
+};
+
+const help = () => {
+  log('warn', 'Usage: node index.js [optional example number]');
+  log('warn', 'Example numbers:');
+  log('   ', enumerateExamples());
+  log('warn', 'If no example number is provided, you will be prompted to select one.');
+  log('warn', 'Please configure a config.json file in the root directory before running any examples.');
+};
+
+console.log('process.argv', process.argv[2]);
+console.log(process.argv[2] === '--help', process.argv[2] === '-h');
+if(process.argv[2] === '--help' || process.argv[2] === '-h') {
+  help();
+  process.exit(0);
+}
+
+printArt();
 log('info', 'The environment is: ', process.env.NODE_ENV);
 log('info', 'Thank you for testing.');
 // Present with options to select which example to run

@@ -12,7 +12,7 @@ const {
   submitOrder,
   spin,
 } = require('../utils');
-const CONFIG = require('../stock_config.json');
+const CONFIG = require('../config.json');
 
 const {APCA_API_KEY_ID, APCA_API_SECRET_KEY, NODE_ENV} = process.env;
 const USE_POLYGON = false;
@@ -144,7 +144,7 @@ class MeanRevision {
 const run = () => {
   log('warn', 'Running Mean Revision Example');
   if(!CONFIG?.stocks?.length) {
-    log('error', 'Please create a "./stock_config.json" file and insert an array of stock symbols to continue.');
+    log('error', 'Please create a "config.json" file in the root directory and insert an array of stock symbols to continue.');
     return;
   }
   log('debug', `Creating new Mean Revision Example with stocks ${CONFIG.stocks}`);

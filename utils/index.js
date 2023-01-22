@@ -12,8 +12,10 @@ let alpaca;
  * @param {Instance} instance - Alpaca instance
  */
 function cacheAlpacaInstance(instance) {
-  alpaca = instance;
-  log('debug', 'Successfully cached Alpaca instance');
+  if(instance) {
+    alpaca = instance;
+    log('debug', 'Successfully cached Alpaca instance');
+  }
 }
 
 /**

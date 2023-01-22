@@ -6,7 +6,7 @@ const {
   cancelExistingOrders,
   spin,
 } = require('../utils');
-const CONFIG = require('../stock_config.json');
+const CONFIG = require('../config.json');
 
 const {APCA_API_KEY_ID, APCA_API_SECRET_KEY, NODE_ENV} = process.env;
 const USE_POLYGON = false;
@@ -39,7 +39,7 @@ class PoliticianTracker {
 
 const run = async () => {
   if(!CONFIG?.politicians?.length) {
-    log('error', 'Please create a "./stock_config.json" file and insert an array of politicians to continue.');
+    log('error', 'Please create a "config.json" file in the root directory and insert an array of politicians to continue.');
     return;
   }
   const politicianTracker = new PoliticianTracker({
