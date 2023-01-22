@@ -14,12 +14,21 @@ const programs = {
   4: cryptoTrader,
 };
 
+const works_in_progress = {
+  3: true,
+  4: true,
+};
+
 /**
  * @description Validates the user's input and runs the selected example
  * @param {string} input_val 
  */
 const validateInput = (input_val) => {
   if(programs[input_val]) {
+    if(works_in_progress[input_val]) {
+      log('warn', 'This program is a work in progress and is not ready for use.');
+      process.exit(1);
+    }
     log('info', `Running ${programs[input_val].name()}`);
     programs[input_val].run();
   } else {
@@ -52,7 +61,7 @@ const determineExample = async (test_example) => {
   }
   const rl = readline.createInterface({input: process.stdin, output: process.stderr});
 
-  await rl.question(`Please select an example to run:\n  ${enumerateExamples()}>`, (answer) => {
+  await rl.question(`Please select an example to run:\n  ${enumerateExamples()}> `, (answer) => {
     validateInput(answer);
   });
 };
