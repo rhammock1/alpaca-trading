@@ -129,17 +129,16 @@ async function getMarketClose() {
  * @description Keep the script running every minute
  * @param {fn} run - parent function
  * @param {fn} rebalance -
+ * @param {number} INTERVAL - interval in minutes
  */
-async function spin(run, rebalance) {
-  const interval = setInterval(async () => {
+async function spin(run, rebalance, INTERVAL) {
+  const handle = setInterval(async () => {
     // Figure out when the market will close so we can prepare to sell beforehand
     try {
       this.time_to_close = await getMarketClose();
     } catch(err) {
       log('error', 'Error while getting market close time.', err);
     }
-
-    const INTERVAL = 15; // minutes
 
     if(this.time_to_close < (MINUTE * INTERVAL)) {
       // Close all positions when there are 15 minutes till market close
@@ -158,7 +157,7 @@ async function spin(run, rebalance) {
         log('error', 'Error while closing positions before market close.', err.error);
       }
 
-      clearInterval(interval);
+      clearInterval(handle);
       log('info', `Sleeping until market close (${INTERVAL} minutes).`);
 
       setTimeout(() => {

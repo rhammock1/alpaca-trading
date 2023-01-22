@@ -67,7 +67,9 @@ class LongShort {
     this.time_to_close = await awaitMarketOpen(this.time_to_close);
     log('info', 'Market opened.');
 
-    await spin(this.run.bind(this), this.rebalance.bind(this));
+    const INTERVAL = 15; // minutes
+
+    await spin(this.run.bind(this), this.rebalance.bind(this), INTERVAL);
   }
 
   // TODO - Refactor this because there is some complex if statements and repeated logic throughout

@@ -50,7 +50,9 @@ class MeanRevision {
     log('info', 'Getting running average.');
     await Promise.all(this.stocks.map(stock => this.getRunningAverage(stock)));
 
-    await spin(this.run.bind(this), this.rebalance.bind(this));
+    const INTERVAL = 15; // minutes
+
+    await spin(this.run.bind(this), this.rebalance.bind(this), INTERVAL);
   }
 
   /**
